@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing Recognition - {{ image_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header">
+            <img  align = "left" src="{{ url_for('static', filename='college_logo.png') }}" alt="Upload Image" style="max-width: 170px;">
+            <img align ="right" src="{{ url_for('static', filename='snr_logo.png') }}" alt="Upload Image" style="max-width: 150px;">
+            <h1>Dimension.AI</h1>
+            <div class="nav">
+                <a href="/">Overview</a>
+                <a href="#">Labeled Images</a>
+                <input type="text" placeholder="Search">
+                <button>Search</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-title">
+        <h2>File: {{ image_name }}</h2>
+    </div>
+
+    <div class="diagram">
+        <img src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Uploaded Image" style="max-width: 600px; border: 1px solid #ccc; border-radius: 8px;">
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-box">
+          <div class="messages" id="message-container">
+            <h1>Ask the LLM</h1>
+            <!-- Chat messages will be displayed here -->
+          </div>
+          <div class="input-area">
+            <input type="text" id="message-input" placeholder="Type a message..." />
+            <button onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+    </div>
+    <style>
+    /* Container for the chatbox */
+    .chat-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Chatbox styles */
+    .chat-box {
+      width: 800px;
+      height: 500px;
+      background-color: rgb(199, 166, 166);
+      border-radius: 8px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      margin: 10px;
+    }
+
+    /* Message container */
+    .messages {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid #ddd;
+    }
+
+    /* Individual message */
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 15px;
+      background-color: #e5e5ea;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      background-color: #000102;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .message.bot {
+      background-color: #e4e4e7;
+      color: #333;
+      align-self: flex-start;
+    }
+
+    /* Input area */
+    .input-area {
+      display: flex;
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #ddd;
+      justify-content: space-between;
+    }
+
+    .input-area input {
+      width: 85%;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .input-area input:focus {
+      border-color: #0e1a27;
+    }
+
+    .input-area button {
+      padding: 10px 15px;
+      background-color: #0b1c30;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .input-area button:hover {
+      background-color: #080e13;
+    }
+  </style>
+    <script>
+        function sendMessage() {
+          const input = document.getElementById('message-input');
+          const messageText = input.value.trim();
+    
+          if (messageText === "") return;
+    
+          // Append user message to the chat
+          appendMessage(messageText, 'user');
+    
+          // Clear input field
+          input.value = '';
+    
+          // Simulate a bot reply after a short delay
+          setTimeout(() => {
+            appendMessage("Bot: " + messageText, 'bot');
+          }, 1000);
+        }
+    
+        function appendMessage(text, sender) {
+          const messageContainer = document.getElementById('message-container');
+    
+          const messageElement = document.createElement('div');
+          messageElement.classList.add('message', sender);
+          messageElement.textContent = text;
+    
+          messageContainer.appendChild(messageElement);
+    
+          // Scroll to the bottom of the chat
+          messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+      </script>
+
+    <!-- Display detected objects -->
+    <center>
+        <h2>Detected Texts</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Region</th>
+            <th>Text</th>
+            <th>Coordinates</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if text_results %}
+            {% for region_id, data in text_results.items() %}
+                <tr>
+                    <td>{{ region_id }}</td>
+                    <td>{{ data['text'] }}</td>
+                    <td>{{ data['coordinates'] }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="3">No text detected</td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+    <h2>Detected Objects</h2>
+    {% for detection in detection_images %}
+        <div class="detection">
+            <div class = "diagram">
+                 <img src="{{ url_for('uploaded_file', filename=detection) }}" alt="Detection Image">
+            </div>
+        </div>
+    {% endfor %}
+    </center>
+    <!-- Show the recognized texts in a table -->
+
+    <!--
+    <h1>Processing Results</h1>
+    
+   
+    <h2>Original Image</h2>
+    <img src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Uploaded Image" style="width: 50%;">
+
+    <h2>Detected Objects</h2>
+    {% for detection in detection_images %}
+        <div class="detection">
+            <img src="{{ url_for('uploaded_file', filename=detection) }}" alt="Detection Image" style="width: 50%;">
+        </div>
+    {% endfor %}
+
+    <div class="dimensions">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Image</th>
+                    <th>Dimension</th>
+                    <th>Description</th>
+                    <th>Tolerance</th>
+                    <th>Unit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>View_01</td>
+                    <td>61.2<br>38.2<br>10<br>R2.5<br>R1.5<br>R4.43<br>4.18</td>
+                    <td>61.2<br>38.2<br>10<br>2.5<br>1.5<br>4.43<br>4.18</td>
+                    <td>--<br>--<br>--<br>Radius<br>Radius<br>Radius<br>4.18</td>
+                    <td>--</td>
+                    <td>mm</td>
+                </tr>
+                <tr>
+                    <td>View_02</td>
+                    <td>90</td>
+                    <td>90</td>
+                    <td>Total Height</td>
+                    <td>--</td>
+                    <td>mm</td>
+                </tr>
+                <tr>
+                    <td>View_03</td>
+                    <td>R2<br>R2.5<br>15.5<br>38.2<br>90</td>
+                    <td>2<br>2.5<br>15.5<br>38.2<br>90</td>
+                    <td>Corner Radius of 2mm<br>Corner Radius of 2.5mm<br>--<br>--<br>--</td>
+                    <td>--</td>
+                    <td>mm</td>
+                </tr>
+            </tbody>
+        </table>
+    </div> -->
+    <footer style="position: sticky;">
+        <p>&copy; 2024 Dimension.AI</p>
+    </footer>
+</body>
+</html>
